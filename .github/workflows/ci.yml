@@ -12,6 +12,8 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      CI: 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -26,10 +28,20 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Require Supabase secrets for RLS suite
+        run: |
+          test -n "${{ secrets.SUPABASE_URL }}" || (echo "Missing secret SUPABASE_URL" && exit 1)
+          test -n "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" || (echo "Missing secret SUPABASE_SERVICE_ROLE_KEY" && exit 1)
+          test -n "${{ secrets.VITE_SUPABASE_ANON_KEY }}" || (echo "Missing secret VITE_SUPABASE_ANON_KEY" && exit 1)
+
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       - run: pnpm build
         env:
           VITE_APP_BASE_PATH: /mountain-athlete-os
-          VITE_API_BASE_URL: https://maos-api.onrender.com
+          VITE_API_BASE_URL: https://maos-api-dkdve.onrender.com

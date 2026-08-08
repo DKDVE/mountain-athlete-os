@@ -15,14 +15,18 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --max-warnings 0",
     "test": "vitest run",
-    "build": "tsc -p tsconfig.build.json"
+    "build": "tsc -p tsconfig.build.json",
+    "gen:types": "node scripts/gen-types.mjs",
+    "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
     "zod": "^3.25.56",
     "zod-to-json-schema": "^3.24.5"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3",
     "vitest": "^3.2.3"
   }
