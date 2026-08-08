@@ -1,27 +1,58 @@
 import { defineConfig, devices } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 
 const basePath = '/mountain-athlete-os';
 
+function loadEnvFile() {
+  try {
+    const raw = readFileSync('.env', 'utf8');
+    for (const line of raw.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq <= 0) continue;
+      const key = trimmed.slice(0, eq).trim();
+      const val = trimmed.slice(eq + 1).trim();
+      if (!process.env[key]) process.env[key] = val;
+    }
+  } catch {
+    // optional
+  }
+}
+
+loadEnvFile();
+
+const skipWebBuild = process.env.E2E_SKIP_WEB_BUILD === 'true';
+
+const webServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === 'true' ? undefined : {
+  command: skipWebBuild
+    ? 'pnpm --filter @maos/web preview --port 4173 --strictPort --host 127.0.0.1'
+    : 'pnpm --filter @maos/shared build && pnpm --filter @maos/web build && pnpm --filter @maos/web preview --port 4173 --strictPort --host 127.0.0.1',
+  url: `http://127.0.0.1:4173${basePath}/`,
+  reuseExistingServer: false,
+  timeout: skipWebBuild ? 120_000 : 300_000,
+  env: {
+    VITE_APP_BASE_PATH: basePath,
+    VITE_API_BASE_URL: process.env.VITE_API_BASE_URL ?? 'http://localhost:3000',
+    VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL ?? '',
+    VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY ?? '',
+    VITE_E2E_TEST_LOGIN: 'true',
+  },
+};
+
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: true,
+  globalSetup: './e2e/global-setup.ts',
+  fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'list',
+  workers: 1,
+  timeout: 120_000,
+  reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:4173${basePath}`,
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:4173${basePath}/`,
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
-    command:
-      'pnpm --filter @maos/web build && pnpm --filter @maos/web preview --port 4173 --strictPort',
-    url: `http://127.0.0.1:4173${basePath}/`,
-    reuseExistingServer: !process.env.CI,
-    env: {
-      VITE_APP_BASE_PATH: basePath,
-      VITE_API_BASE_URL: process.env.VITE_API_BASE_URL ?? 'http://localhost:3000',
-    },
-  },
+  ...(webServer ? { webServer } : {}),
 });
