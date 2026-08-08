@@ -30,6 +30,13 @@ async function fetchHealth(): Promise<HealthState> {
     return { status: 'ok', uptime: body.data.uptime };
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Network error';
+    if (message === 'Failed to fetch') {
+      return {
+        status: 'error',
+        message:
+          'Request blocked — often an ad blocker blocking onrender.com. Disable extensions for this site, or open the API health URL directly.',
+      };
+    }
     return { status: 'error', message };
   }
 }
@@ -70,6 +77,19 @@ export function LandingPage() {
           <div className="mt-2 space-y-3">
             <p className="text-lg font-medium text-destructive">error</p>
             <p className="text-sm text-muted-foreground">{health.message}</p>
+            {getApiBaseUrl() && (
+              <p className="text-sm text-muted-foreground">
+                API direct:{' '}
+                <a
+                  className="underline underline-offset-4 hover:text-foreground"
+                  href={`${getApiBaseUrl()}/health`}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {getApiBaseUrl()}/health
+                </a>
+              </p>
+            )}
             <Button variant="outline" onClick={() => void load()} type="button">
               Retry
             </Button>
