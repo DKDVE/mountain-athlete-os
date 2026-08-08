@@ -22,6 +22,8 @@ function loadEnvFile() {
 
 loadEnvFile();
 
+const skipWebBuild = process.env.E2E_SKIP_WEB_BUILD === 'true';
+
 export default defineConfig({
   testDir: './e2e',
   globalSetup: './e2e/global-setup.ts',
@@ -37,11 +39,12 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command:
-      'pnpm --filter @maos/shared build && pnpm --filter @maos/web build && pnpm --filter @maos/web preview --port 4173 --strictPort',
+    command: skipWebBuild
+      ? 'pnpm --filter @maos/web preview --port 4173 --strictPort'
+      : 'pnpm --filter @maos/shared build && pnpm --filter @maos/web build && pnpm --filter @maos/web preview --port 4173 --strictPort',
     url: `http://127.0.0.1:4173${basePath}/`,
     reuseExistingServer: false,
-    timeout: 180_000,
+    timeout: skipWebBuild ? 60_000 : 300_000,
     env: {
       VITE_APP_BASE_PATH: basePath,
       VITE_API_BASE_URL: process.env.VITE_API_BASE_URL ?? 'http://localhost:3000',
