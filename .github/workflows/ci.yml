@@ -53,9 +53,17 @@ jobs:
         run: pnpm exec playwright install chromium --with-deps
 
       - name: E2E (offline sync)
-        run: pnpm e2e
+        run: |
+          pnpm --filter @maos/web preview --port 4173 --strictPort --host 127.0.0.1 &
+          for i in $(seq 1 60); do
+            if curl -sf "http://127.0.0.1:4173/mountain-athlete-os/" >/dev/null; then break; fi
+            sleep 2
+          done
+          curl -sf "http://127.0.0.1:4173/mountain-athlete-os/" || (echo "Preview server failed to start" && exit 1)
+          pnpm exec playwright test
         env:
-          E2E_SKIP_WEB_BUILD: 'true'
+          PLAYWRIGHT_SKIP_WEBSERVER: 'true'
+          VITE_APP_BASE_PATH: /mountain-athlete-os
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
