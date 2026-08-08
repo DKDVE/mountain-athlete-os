@@ -45,3 +45,18 @@ jobs:
         env:
           VITE_APP_BASE_PATH: /mountain-athlete-os
           VITE_API_BASE_URL: https://maos-api-dkdve.onrender.com
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: E2E (offline sync)
+        run: pnpm e2e
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_APP_BASE_PATH: /mountain-athlete-os
+          VITE_API_BASE_URL: https://maos-api-dkdve.onrender.com
+          MAOS_SEED_EMAIL: seed@maos.local
+          MAOS_SEED_PASSWORD: seedpass123

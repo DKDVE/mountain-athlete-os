@@ -9,10 +9,10 @@
     ]
   },
   "scripts": {
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "tsc -b",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
-    "build": "pnpm -r build",
+    "build": "pnpm --filter @maos/shared build && pnpm --filter @maos/api build && pnpm --filter @maos/web build",
     "e2e": "playwright test",
     "prepare": "husky"
   },

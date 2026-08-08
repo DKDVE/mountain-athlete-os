@@ -38,7 +38,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command:
-      'pnpm --filter @maos/web build && pnpm --filter @maos/web preview --port 4173 --strictPort',
+      'pnpm --filter @maos/shared build && pnpm --filter @maos/web build && pnpm --filter @maos/web preview --port 4173 --strictPort',
     url: `http://127.0.0.1:4173${basePath}/`,
     reuseExistingServer: false,
     timeout: 180_000,
