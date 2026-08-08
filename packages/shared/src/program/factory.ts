@@ -184,11 +184,11 @@ export function buildProgramStructure(): ProgramStructure {
     mesocycles: [
       {
         id: 'meso-1',
-        name: 'Foundation',
+        name: 'Rebuild',
         startWeek: 1,
         endWeek: 4,
         deloadWeek: 4,
-        focus: 'Technique, aerobic base, joint tolerance',
+        focus: 'Technique reset, aerobic base, joint tolerance for trek loads',
       },
       {
         id: 'meso-2',
@@ -196,15 +196,15 @@ export function buildProgramStructure(): ProgramStructure {
         startWeek: 5,
         endWeek: 8,
         deloadWeek: 8,
-        focus: 'Progressive overload, run volume',
+        focus: 'Progressive overload, run volume, strength for ascent',
       },
       {
         id: 'meso-3',
-        name: 'Peak',
+        name: 'Perform',
         startWeek: 9,
         endWeek: 12,
         deloadWeek: 12,
-        focus: 'Race/trek readiness, intensity touches',
+        focus: 'Trek readiness, intensity touches, peak hybrid output',
       },
     ],
     weeklyTemplate: [
@@ -229,6 +229,30 @@ function addDays(dateStr: string, days: number): string {
 
 function weekStartDate(startDate: string, weekNumber: number): string {
   return addDays(startDate, (weekNumber - 1) * 7);
+}
+
+/** Calendar week # (1–12) for a date relative to program start (Monday-aligned blocks). */
+export function weekNumberForDate(startDate: string, today: string): number {
+  const start = new Date(`${startDate}T12:00:00Z`);
+  const end = new Date(`${today}T12:00:00Z`);
+  const days = Math.floor((end.getTime() - start.getTime()) / 86400000);
+  if (days < 0) return 1;
+  return Math.min(TOTAL_WEEKS, Math.floor(days / 7) + 1);
+}
+
+export function programContextForDate(
+  structure: ProgramStructure,
+  startDate: string,
+  today: string,
+) {
+  const weekNumber = weekNumberForDate(startDate, today);
+  const meso = mesocycleForWeek(weekNumber, structure);
+  return {
+    weekNumber,
+    mesoName: meso.name,
+    mesoFocus: meso.focus,
+    isDeload: isDeloadWeek(weekNumber),
+  };
 }
 
 export function isDeloadWeek(weekNumber: number): boolean {

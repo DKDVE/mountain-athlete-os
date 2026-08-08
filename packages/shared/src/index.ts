@@ -34,6 +34,8 @@ export {
   buildWeekSessions,
   isDeloadWeek,
   mesocycleForWeek,
+  programContextForDate,
+  weekNumberForDate,
   DELOAD_WEEKS,
   TOTAL_WEEKS,
   type ProgramStructure,
@@ -44,3 +46,4 @@ export { EXERCISE_LIBRARY, type ExerciseSeed } from './seed/exercises.js';
 export { STAPLE_FOODS, type FoodSeed } from './seed/foods.js';
 export type { Database, Tables, TablesInsert, TablesUpdate, Json } from './db.types.js';
 export { isUlid, ulid } from './utils/ulid.js';
+export { suggestWeight, type SuggestWeightInput } from './training/suggested-weight.js';

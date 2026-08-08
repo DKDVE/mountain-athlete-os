@@ -82,7 +82,7 @@ export async function runSeed(startDate = process.env.MAOS_PROGRAM_START ?? '202
 
   const structure = buildProgramStructure();
 
-  const existing = await admin
+  const existingProgram = await admin
     .from('programs')
     .select('id')
     .eq('user_id', userId)
@@ -90,8 +90,8 @@ export async function runSeed(startDate = process.env.MAOS_PROGRAM_START ?? '202
     .maybeSingle();
 
   let programId: string;
-  if (existing.data?.id) {
-    programId = existing.data.id;
+  if (existingProgram.data?.id) {
+    programId = existingProgram.data.id;
     await admin
       .from('programs')
       .update({
