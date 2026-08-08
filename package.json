@@ -4,7 +4,9 @@
   "type": "module",
   "packageManager": "pnpm@10.12.4",
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   },
   "scripts": {
     "typecheck": "pnpm -r typecheck",
@@ -17,6 +19,7 @@
   "devDependencies": {
     "@eslint/js": "^9.28.0",
     "@playwright/test": "^1.52.0",
+    "@supabase/supabase-js": "^2.112.2",
     "eslint": "^9.28.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-react-hooks": "^5.2.0",

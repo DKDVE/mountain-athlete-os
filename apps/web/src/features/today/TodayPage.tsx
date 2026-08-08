@@ -15,6 +15,7 @@ import {
   useDailyMetrics,
   useProgramContext,
   useProteinToday,
+  useProteinTarget,
   useSessionsForDate,
   useTodayDate,
   useTrainingStreak,
@@ -74,6 +75,7 @@ export function TodayPage() {
   const sessionsQuery = useSessionsForDate(today);
   const metricsQuery = useDailyMetrics(today);
   const proteinQuery = useProteinToday(today);
+  const proteinTargetQuery = useProteinTarget();
   const loadQuery = useWeeklyLoad(today);
   const streakQuery = useTrainingStreak(today);
 
@@ -167,46 +169,54 @@ export function TodayPage() {
 
       <div className="grid gap-4 md:grid-cols-3">
         {proteinQuery.data != null ? (
-          <MetricCard label="Protein today" value={Math.round(proteinQuery.data)} unit="g" />
+          <MetricCard
+            label="Protein today"
+            value={Math.round(proteinQuery.data)}
+            unit="g"
+            hint={
+              proteinTargetQuery.data != null
+                ? `Target ${String(proteinTargetQuery.data)} g`
+                : undefined
+            }
+          />
         ) : (
-          <Card>
-            <CardContent className="p-4 text-sm text-muted-foreground">No meals logged today.</CardContent>
-          </Card>
+          <EmptyState
+            className="py-4"
+            title="No meals logged"
+            description="Log fuel to track protein against your profile target."
+          />
         )}
         {loadQuery.data != null ? (
           <MetricCard label="Weekly load" value={loadQuery.data.toFixed(1)} unit="au" />
         ) : (
-          <Card>
-            <CardContent className="p-4 text-sm text-muted-foreground">Weekly load not computed yet.</CardContent>
-          </Card>
+          <EmptyState
+            className="py-4"
+            title="Weekly load not computed"
+            description="Check-in and nightly recompute populate training load."
+          />
         )}
         {streakQuery.data != null ? (
           <MetricCard label="Training streak" value={streakQuery.data} unit="days" />
         ) : (
-          <Card>
-            <CardContent className="p-4 text-sm text-muted-foreground">No completed sessions yet.</CardContent>
-          </Card>
+          <EmptyState
+            className="py-4"
+            title="No training streak"
+            description="Complete sessions to build your streak."
+          />
         )}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Check-in</CardTitle>
-          <p className="text-sm text-muted-foreground">Sleep, energy, soreness, and RHR.</p>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" disabled>Log check-in</Button>
-        </CardContent>
-      </Card>
+      <EmptyState
+        className="py-6"
+        title="Check-in not available yet"
+        description="Sleep, energy, soreness, and RHR check-in ships in Phase 6."
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Coach tip</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Hit protein target early on training days. AI coach arrives in Phase 9.
-        </CardContent>
-      </Card>
+      <EmptyState
+        className="py-6"
+        title="No coach insight"
+        description="AI coach guidance arrives in Phase 9."
+      />
 
       {showTomorrow && tomorrowSessions.length > 0 ? (
         <Card>

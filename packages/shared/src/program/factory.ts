@@ -130,6 +130,7 @@ const SESSION_TEMPLATES: Record<string, PlannedSession> = {
     exercises: [
       {
         exerciseId: 'bench-press',
+        supersetWith: 'barbell-row',
         sets: [
           { setNo: 1, reps: 6, weightKg: null, rpe: 7, tempo: null, isWarmup: true, isDropset: false },
           { setNo: 2, reps: 6, weightKg: null, rpe: 8, tempo: null, isWarmup: false, isDropset: false },
@@ -138,6 +139,7 @@ const SESSION_TEMPLATES: Record<string, PlannedSession> = {
       },
       {
         exerciseId: 'barbell-row',
+        supersetWith: 'bench-press',
         sets: [
           { setNo: 1, reps: 8, weightKg: null, rpe: 7, tempo: null, isWarmup: false, isDropset: false },
           { setNo: 2, reps: 8, weightKg: null, rpe: 8, tempo: null, isWarmup: false, isDropset: false },

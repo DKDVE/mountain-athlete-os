@@ -10,12 +10,12 @@ export interface OutboxRow {
 
 export interface WorkoutStateRow {
   sessionId: string;
-  exerciseIndex: number;
-  setIndex: number;
+  stepIndex: number;
   elapsedS: number;
   restEndsAt: number | null;
   loggedSets: LoggedSetRow[];
   startedAt: string;
+  drawerExerciseId: string | null;
 }
 
 export interface LoggedSetRow {
@@ -38,6 +38,10 @@ export class MaosDexie extends Dexie {
   constructor() {
     super('maos');
     this.version(1).stores({
+      outbox: 'clientId, ts',
+      workoutState: 'sessionId',
+    });
+    this.version(2).stores({
       outbox: 'clientId, ts',
       workoutState: 'sessionId',
     });

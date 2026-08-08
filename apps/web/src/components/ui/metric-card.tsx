@@ -5,11 +5,13 @@ export function MetricCard({
   label,
   value,
   unit,
+  hint,
   className,
 }: {
   label: string;
   value: string | number;
   unit?: string;
+  hint?: string;
   className?: string;
 }) {
   return (
@@ -22,6 +24,7 @@ export function MetricCard({
           {value}
           {unit ? <span className="ml-1 text-lg text-muted-foreground">{unit}</span> : null}
         </p>
+        {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
       </CardContent>
     </Card>
   );

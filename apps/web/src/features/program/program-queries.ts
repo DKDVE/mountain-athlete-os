@@ -29,6 +29,7 @@ type SessionSelect = Pick<
 type DailyMetricsSelect = Pick<Tables<'daily_metrics'>, 'readiness' | 'load'>;
 type MealProteinSelect = Pick<Tables<'meals'>, 'protein_g'>;
 type SessionDateSelect = Pick<Tables<'sessions'>, 'date'>;
+type ProfileTargetsSelect = Pick<Tables<'profiles'>, 'targets'>;
 
 function assertUserId(userId: string | undefined): string {
   if (!userId) throw new Error('Not authenticated');
@@ -75,6 +76,17 @@ async function fetchDailyMetrics(userId: string, date: string): Promise<DailyMet
     .maybeSingle<DailyMetricsSelect>();
   if (error) throw error;
   return data;
+}
+
+async function fetchProteinTarget(userId: string): Promise<number | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('targets')
+    .eq('id', userId)
+    .maybeSingle<ProfileTargetsSelect>();
+  if (error) throw error;
+  const targets = data?.targets as { protein_g?: number } | null;
+  return typeof targets?.protein_g === 'number' ? targets.protein_g : null;
 }
 
 async function fetchProteinToday(userId: string, date: string): Promise<number | null> {
@@ -176,6 +188,16 @@ export function useProteinToday(date: string) {
     enabled: Boolean(userId),
     queryFn: () => fetchProteinToday(assertUserId(userId), date),
     staleTime: 30_000,
+  });
+}
+
+export function useProteinTarget() {
+  const userId = useAuthStore((s) => s.user?.id);
+  return useQuery({
+    queryKey: ['protein-target', userId],
+    enabled: Boolean(userId),
+    queryFn: () => fetchProteinTarget(assertUserId(userId)),
+    staleTime: 120_000,
   });
 }
 

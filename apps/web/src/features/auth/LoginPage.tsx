@@ -10,8 +10,10 @@ export function LoginPage() {
   const user = useAuthStore((s) => s.user);
   const signInWithEmail = useAuthStore((s) => s.signInWithEmail);
   const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);
+  const signInWithPassword = useAuthStore((s) => s.signInWithPassword);
 
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -40,6 +42,16 @@ export function LoginPage() {
     if (result.error) setError(result.error);
   };
 
+  const onPassword = async () => {
+    setError(null);
+    setPending(true);
+    const result = await signInWithPassword(email.trim(), password);
+    setPending(false);
+    if (result.error) setError(result.error);
+  };
+
+  const e2eLogin = import.meta.env.VITE_E2E_TEST_LOGIN === 'true';
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md border-border">
@@ -66,6 +78,31 @@ export function LoginPage() {
           <Button className="w-full" disabled={pending || !email.trim()} onClick={() => void onEmail()}>
             Send magic link
           </Button>
+          {e2eLogin ? (
+            <div className="space-y-2">
+              <label htmlFor="password" className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                Password (E2E)
+              </label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                }}
+                autoComplete="current-password"
+              />
+              <Button
+                className="w-full"
+                variant="secondary"
+                data-testid="test-login"
+                disabled={pending || !email.trim() || !password}
+                onClick={() => void onPassword()}
+              >
+                Test sign in
+              </Button>
+            </div>
+          ) : null}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-border" />
