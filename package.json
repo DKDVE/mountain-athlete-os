@@ -1,0 +1,42 @@
+{
+  "name": "mountain-athlete-os",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.12.4",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
+  "scripts": {
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build",
+    "e2e": "playwright test",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "@playwright/test": "^1.52.0",
+    "eslint": "^9.28.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.0",
+    "prettier": "^3.5.3",
+    "typescript-eslint": "^8.34.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,css,md}": "prettier --write",
+    "apps/web/**/*.{ts,tsx}": [
+      "eslint --max-warnings 0 --fix"
+    ],
+    "apps/api/**/*.ts": [
+      "eslint --max-warnings 0 --fix"
+    ],
+    "packages/shared/**/*.ts": [
+      "eslint --max-warnings 0 --fix"
+    ]
+  }
+}
