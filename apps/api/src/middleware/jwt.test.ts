@@ -7,6 +7,8 @@ describe('createJwtVerifier', () => {
     const verifier = createJwtVerifier({
       port: 3000,
       allowedOrigin: 'http://localhost:5173',
+      supabaseUrl: '',
+      supabaseJwksUrl: '',
       supabaseJwtSecret: 'test-secret',
       openrouterApiKey: '',
       openrouterModelDefault: 'openrouter/free',

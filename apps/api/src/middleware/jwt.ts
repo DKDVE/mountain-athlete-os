@@ -13,43 +13,53 @@ declare module 'fastify' {
 }
 
 export function createJwtVerifier(config: ApiConfig) {
+  const jwks = config.supabaseJwksUrl
+    ? jose.createRemoteJWKSet(new URL(config.supabaseJwksUrl))
+    : null;
+
   return async function verifyJwt(request: FastifyRequest, reply: FastifyReply) {
     const header = request.headers.authorization;
     if (!header?.startsWith('Bearer ')) {
-      return reply.status(401).send({
+      return await reply.status(401).send({
         ok: false,
         error: { code: 'UNAUTHORIZED', message: 'Missing bearer token', retryable: false },
       });
     }
 
-    if (!config.supabaseJwtSecret) {
-      return reply.status(503).send({
-        ok: false,
-        error: {
-          code: 'CONFIG',
-          message: 'JWT secret not configured',
-          retryable: false,
-        },
-      });
-    }
-
     const token = header.slice('Bearer '.length);
+    let payload: jose.JWTPayload;
+
     try {
-      const secret = new TextEncoder().encode(config.supabaseJwtSecret);
-      const { payload } = await jose.jwtVerify(token, secret, { algorithms: ['HS256'] });
-      const sub = payload.sub;
-      if (!sub) {
-        return await reply.status(401).send({
+      if (jwks) {
+        ({ payload } = await jose.jwtVerify(token, jwks));
+      } else if (config.supabaseJwtSecret) {
+        const secret = new TextEncoder().encode(config.supabaseJwtSecret);
+        ({ payload } = await jose.jwtVerify(token, secret, { algorithms: ['HS256'] }));
+      } else {
+        return await reply.status(503).send({
           ok: false,
-          error: { code: 'UNAUTHORIZED', message: 'Invalid token subject', retryable: false },
+          error: {
+            code: 'CONFIG',
+            message: 'SUPABASE_JWKS_URL, SUPABASE_URL, or SUPABASE_JWT_SECRET required',
+            retryable: false,
+          },
         });
       }
-      request.authUser = { userId: sub };
     } catch {
-      return reply.status(401).send({
+      return await reply.status(401).send({
         ok: false,
         error: { code: 'UNAUTHORIZED', message: 'Invalid token', retryable: false },
       });
     }
+
+    const sub = payload.sub;
+    if (!sub) {
+      return await reply.status(401).send({
+        ok: false,
+        error: { code: 'UNAUTHORIZED', message: 'Invalid token subject', retryable: false },
+      });
+    }
+
+    request.authUser = { userId: sub };
   };
 }
