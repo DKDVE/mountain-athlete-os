@@ -42,10 +42,21 @@ export async function runSeed(startDate = process.env.MAOS_PROGRAM_START ?? '202
       password,
       email_confirm: true,
     });
-    if (created.error || !created.data.user) {
-      throw created.error ?? new Error('Failed to create seed user');
+    if (created.error) {
+      // ponytail: parallel CI jobs can race on createUser; listUsers may also paginate
+      if (created.error.code === 'email_exists') {
+        const retry = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+        const refound = retry.data.users.find((u) => u.email === email);
+        if (!refound) throw created.error;
+        userId = refound.id;
+      } else {
+        throw created.error;
+      }
+    } else if (!created.data.user) {
+      throw new Error('Failed to create seed user');
+    } else {
+      userId = created.data.user.id;
     }
-    userId = created.data.user.id;
   }
 
   await admin.from('profiles').upsert({
