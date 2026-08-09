@@ -106,10 +106,10 @@ export function TodayPage() {
     return (
       <EmptyState
         title="Start Week 1"
-        description="No active program yet. Seed data or create your 12-week hybrid ascent to see today's session."
+        description="Complete onboarding to generate your personalized 12-week program."
         action={
           <Button asChild variant="outline">
-            <Link to="/train/program">View program structure</Link>
+            <Link to="/onboarding">Set up my program</Link>
           </Button>
         }
       />

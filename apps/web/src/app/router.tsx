@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
+import { OnboardingGate } from '@/features/onboarding/OnboardingGate';
+import { OnboardingPage } from '@/features/onboarding/OnboardingPage';
 import { AppShell } from '@/features/shell/AppShell';
 import { ProgramHubPage } from '@/features/program/ProgramHubPage';
 import { StubPage } from '@/features/shell/StubPage';
@@ -17,9 +19,19 @@ export function AppRouter() {
       <Route path="/welcome" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute requireOnboarding={false}>
+            <OnboardingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         element={
           <ProtectedRoute>
-            <AppShell />
+            <OnboardingGate>
+              <AppShell />
+            </OnboardingGate>
           </ProtectedRoute>
         }
       >

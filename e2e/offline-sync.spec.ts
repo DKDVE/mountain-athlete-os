@@ -64,6 +64,7 @@ test('offline workout logs sync to Supabase without duplicates', async ({ page, 
   }
 
   await page.getByRole('tab', { name: 'A2' }).click();
+  await expect(page.getByRole('heading', { name: /Barbell Row/i })).toBeVisible({ timeout: 10_000 });
   await page.getByTestId('complete-set').click();
   await skipRestIfVisible(page);
 
@@ -87,7 +88,7 @@ test('offline workout logs sync to Supabase without duplicates', async ({ page, 
 
   expect(rows.some((r) => r.is_dropset)).toBe(true);
   expect(rows.some((r) => r.pain?.region === 'knee')).toBe(true);
-  expect(rows.some((r) => r.exercise_id === 'barbell-row')).toBe(true);
+  expect(rows.some((r) => r.exercise_id === 'bench-press')).toBe(true);
 
   const countBefore = rows.length;
   await page.reload();

@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 import { loadConfig } from './config.js';
 import { createJwtVerifier } from './middleware/jwt.js';
 import { healthRoutes } from './routes/health.js';
+import { onboardingRoutes } from './routes/onboarding.js';
 
 const config = loadConfig();
 
@@ -14,6 +15,7 @@ await app.register(cors, {
 });
 
 healthRoutes(app);
+onboardingRoutes(app, config);
 
 // JWT middleware registered for future protected routes; not applied to /health
 app.addHook('onRequest', async (request, reply) => {
