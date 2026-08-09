@@ -87,6 +87,5 @@ export function apiError(
 }
 
 export function getUserId(request: FastifyRequest): string | null {
-  const sub = (request as FastifyRequest & { user?: { sub?: string } }).user?.sub;
-  return typeof sub === 'string' ? sub : null;
+  return request.authUser?.userId ?? null;
 }
