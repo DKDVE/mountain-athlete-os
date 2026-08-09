@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Info } from 'lucide-react';
 import { PlannedSessionSchema, suggestWeight } from '@maos/shared';
@@ -62,15 +62,24 @@ export function WorkoutLoggerPage() {
   const loggedClientIdsRef = useRef<string[]>([]);
 
   const session = sessionQuery.data;
-  const planned = session ? PlannedSessionSchema.safeParse(session.planned) : null;
+  const planned = useMemo(
+    () => (session ? PlannedSessionSchema.safeParse(session.planned) : null),
+    [session],
+  );
   const exercises = planned?.success ? planned.data.exercises : [];
   const steps = buildWorkoutSteps(exercises);
 
   useEffect(() => {
     if (!sessionId) return;
-    setState(defaultState(sessionId));
+    let cancelled = false;
+    setState(null);
+
     void maosDb.workoutState.get(sessionId).then((saved) => {
-      if (!saved) return;
+      if (cancelled) return;
+      if (!saved) {
+        setState(defaultState(sessionId));
+        return;
+      }
       if ('stepIndex' in saved) {
         setState(saved);
         return;
@@ -97,17 +106,21 @@ export function WorkoutLoggerPage() {
       }
       setState(defaultState(sessionId));
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId, planned]);
 
   useEffect(() => {
-    if (!state) return;
+    if (!sessionId) return;
     timerRef.current = setInterval(() => {
       setState((prev) => (prev ? { ...prev, elapsedS: prev.elapsedS + 1 } : prev));
     }, 1000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [state?.sessionId, state]);
+  }, [sessionId]);
 
   const persistState = useCallback(async (next: WorkoutStateRow) => {
     await maosDb.workoutState.put(next);
