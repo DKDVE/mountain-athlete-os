@@ -21,6 +21,17 @@ const AI_FIXTURE = {
   metricsSnapshot: { heightCm: 175, weightKg: 75 },
 };
 
+const DUAL_INJURY_FIXTURE = {
+  ...AI_FIXTURE,
+  goals: ['hybrid_performance'],
+  screening: {
+    flags: [
+      { flag: 'current_injury', region: 'lowBack', note: 'Lower-back pain' },
+      { flag: 'current_injury', region: 'shoulder', note: 'Shoulder pain' },
+    ],
+  },
+};
+
 async function createFreshUser(suffix: string) {
   const email = `e2e-onboard-${suffix}-${Date.now()}@maos.local`;
   const password = 'e2e-onboard-pass-123';
@@ -81,6 +92,10 @@ test('Door A: sign up → manual onboarding → Today shows Week 1 session', asy
   expect(sessions.some((s) => s.title.includes('Lower A'))).toBe(true);
 
   await expect(page.getByText(/Week 1|Lower A|Start session|Rest day/i).first()).toBeVisible({ timeout: 15_000 });
+
+  await page.getByRole('link', { name: 'Start session' }).click();
+  await expect(page.getByTestId('workout-logger')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: /Back Squat|Goblet Squat/i })).toBeVisible();
 });
 
 test('Door B: AI parse (mocked) → confirm → Today shows Week 1', async ({ page }) => {
@@ -136,6 +151,36 @@ test('shoulder injury excludes overhead press from generated program', async ({ 
   const ids = upper?.planned.exercises?.map((e) => e.exerciseId) ?? [];
   expect(ids).not.toContain('overhead-press');
   expect(ids).not.toContain('bench-press');
+});
+
+test('Door B dual injury: Start session loads substituted Lower A exercises', async ({ page }) => {
+  await page.route(`${API_BASE}/onboarding/parse-profile`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, data: { profile: DUAL_INJURY_FIXTURE } }),
+    });
+  });
+
+  const user = await createFreshUser('door-b-injury');
+  await login(page, user.email, user.password);
+  await page.getByTestId('onboarding-door-ai').click();
+  await page.getByTestId('onboarding-ai-text').fill(
+    'Hybrid performance with low back and shoulder issues. 4 days, barbell and dumbbells.',
+  );
+  await page.getByTestId('onboarding-ai-submit').click();
+  await page.getByTestId('onboarding-ai-confirm').click();
+  await page.waitForURL(/\/mountain-athlete-os\/?$/, { timeout: 30_000 });
+
+  const sessions = await fetch(
+    `${meta.supabaseUrl}/rest/v1/sessions?user_id=eq.${user.userId}&title=eq.Lower%20A&select=planned`,
+    { headers: { apikey: meta.serviceKey, Authorization: `Bearer ${meta.serviceKey}` } },
+  ).then((r) => r.json()) as Array<{ planned: { exercises?: Array<{ exerciseId: string }> } }>;
+  expect((sessions[0]?.planned.exercises?.length ?? 0)).toBeGreaterThan(0);
+
+  await page.getByRole('link', { name: 'Start session' }).click();
+  await expect(page.getByTestId('workout-logger')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: /Goblet Squat|Hip Thrust/i })).toBeVisible();
 });
 
 test('longevity goal shows specialized consult-professional state', async ({ page }) => {
