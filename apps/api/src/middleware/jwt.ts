@@ -12,13 +12,9 @@ declare module 'fastify' {
   }
 }
 
-function jwksUrl(supabaseUrl: string): URL {
-  return new URL('/auth/v1/.well-known/jwks.json', supabaseUrl);
-}
-
 export function createJwtVerifier(config: ApiConfig) {
-  const jwks = config.supabaseUrl
-    ? jose.createRemoteJWKSet(jwksUrl(config.supabaseUrl))
+  const jwks = config.supabaseJwksUrl
+    ? jose.createRemoteJWKSet(new URL(config.supabaseJwksUrl))
     : null;
 
   return async function verifyJwt(request: FastifyRequest, reply: FastifyReply) {
@@ -44,7 +40,7 @@ export function createJwtVerifier(config: ApiConfig) {
           ok: false,
           error: {
             code: 'CONFIG',
-            message: 'SUPABASE_URL or SUPABASE_JWT_SECRET required',
+            message: 'SUPABASE_JWKS_URL, SUPABASE_URL, or SUPABASE_JWT_SECRET required',
             retryable: false,
           },
         });
