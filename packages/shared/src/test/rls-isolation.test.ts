@@ -5,6 +5,7 @@ import { EXERCISE_LIBRARY } from '../seed/exercises.js';
 
 const USER_OWNED_TABLES = [
   'profiles',
+  'athlete_profiles',
   'programs',
   'sessions',
   'set_logs',

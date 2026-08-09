@@ -20,5 +20,7 @@ services:
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false
-      - key: OPENROUTER_MODEL
+      - key: OPENROUTER_MODEL_DEFAULT
         value: openrouter/free
+      - key: OPENROUTER_MODEL_PREMIUM
+        value: deepseek/deepseek-v4-flash

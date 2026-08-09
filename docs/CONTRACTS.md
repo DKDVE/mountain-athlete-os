@@ -15,7 +15,8 @@ SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=    # server-only, for cron recompute
 SUPABASE_JWT_SECRET=          # to verify caller tokens
 OPENROUTER_API_KEY=
-OPENROUTER_MODEL=openrouter/free
+OPENROUTER_MODEL_DEFAULT=openrouter/free
+OPENROUTER_MODEL_PREMIUM=deepseek/deepseek-v4-flash
 ALLOWED_ORIGIN=               # the GitHub Pages origin, for CORS
 ```
 
@@ -212,6 +213,15 @@ create table coach_messages (
   created_at timestamptz not null default now()
 );
 
+-- athlete onboarding profile (versioned jsonb, validated app-side via AthleteProfile Zod)
+create table athlete_profiles (
+  user_id uuid primary key references auth.users on delete cascade,
+  version int not null default 1,
+  profile jsonb not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- RLS PATTERN (apply to EVERY user-owned table above; exercises/foods also allow global rows):
 alter table sessions enable row level security;
 create policy sel on sessions for select using (user_id = auth.uid());
@@ -241,6 +251,38 @@ export const SetLog = z.object({
 });
 export type SetLog = z.infer<typeof SetLog>;
 // Session, Run, Meal, Checkin, Measurement, Goal, DashboardConfig, WidgetInstance all defined the same way.
+
+export const AthleteGoal = z.enum([
+  'fat_loss','recomposition','hypertrophy','strength','endurance',
+  'hybrid_performance','event_specific','mobility_pain','longevity','glp1_preservation'
+]);
+export const AthleteProfile = z.object({
+  goals: z.array(AthleteGoal).min(1),
+  experience: z.enum(['beginner','returning','intermediate','advanced']),
+  constraints: z.object({
+    daysPerWeek: z.number().int().min(1).max(7),
+    sessionMinutes: z.number().int().min(20).max(180),
+    equipment: z.array(z.string()),
+    schedule: z.string().optional(),
+  }),
+  screening: z.object({ flags: z.array(z.object({
+    flag: z.enum(['cardiac','metabolic','renal','pregnancy','current_injury','recent_surgery','uncontrolled_bp','chronic_condition_other']),
+    region: z.string().optional(), note: z.string().optional(),
+  })).default([]) }),
+  preferences: z.object({
+    likedMovements: z.array(z.string()).default([]),
+    dislikedMovements: z.array(z.string()).default([]),
+    dietaryPattern: z.string().nullable().optional(),
+    wearableOwned: z.string().nullable().optional(),
+  }),
+  metricsSnapshot: z.object({
+    heightCm: z.number().positive().nullable().optional(),
+    weightKg: z.number().positive().nullable().optional(),
+    waistCm: z.number().positive().nullable().optional(),
+    currentLifts: z.record(z.string(), z.object({ weightKg: z.number().nullable(), reps: z.number().int().nullable() })).optional(),
+  }).default({}),
+});
+export type AthleteProfile = z.infer<typeof AthleteProfile>;
 ```
 
 ---
@@ -291,6 +333,10 @@ POST /coach/import-routine
 POST /dashboard/ai-edit
   body:  { instruction: string, current: DashboardConfig, availableSources: string[] }
   reply: { ok, data:{ next: DashboardConfig, changeSummary: string } } // validated to DashboardConfig or error
+POST /onboarding/parse-profile
+  body:  { text: string }
+  reply: { ok, data:{ profile: AthleteProfile } } | { ok:false, error:{ code:'AI_SCHEMA', retryable:true } }
+  model: OPENROUTER_MODEL_PREMIUM, response_format json_schema → Zod re-validate
 POST /internal/recompute-metrics     // cron only, service-role guarded, not called by browser
 ```
 `CoachAction` (structured, schema-enforced, validated before apply): 

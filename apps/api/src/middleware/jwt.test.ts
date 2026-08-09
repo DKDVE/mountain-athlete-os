@@ -8,6 +8,9 @@ describe('createJwtVerifier', () => {
       port: 3000,
       allowedOrigin: 'http://localhost:5173',
       supabaseJwtSecret: 'test-secret',
+      openrouterApiKey: '',
+      openrouterModelDefault: 'openrouter/free',
+      openrouterModelPremium: 'deepseek/deepseek-v4-flash',
     });
 
     const reply = {

@@ -82,6 +82,24 @@ export async function runSeed(startDate = process.env.MAOS_PROGRAM_START ?? '202
 
   const structure = buildProgramStructure();
 
+  await admin.from('athlete_profiles').upsert({
+    user_id: userId,
+    version: 1,
+    profile: {
+      goals: ['hybrid_performance'],
+      experience: 'intermediate',
+      constraints: {
+        daysPerWeek: 4,
+        sessionMinutes: 60,
+        equipment: ['barbell', 'rack', 'bench', 'pull_up_bar', 'dumbbell', 'bodyweight', 'outdoor'],
+      },
+      screening: { flags: [] },
+      preferences: { likedMovements: [], dislikedMovements: [] },
+      metricsSnapshot: {},
+    },
+    updated_at: new Date().toISOString(),
+  });
+
   const existingProgram = await admin
     .from('programs')
     .select('id')

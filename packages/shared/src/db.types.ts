@@ -145,6 +145,13 @@ export type Database = {
         targets: Json;
         units: Json;
       }>;
+      athlete_profiles: TableDef<{
+        created_at: string;
+        profile: Json;
+        updated_at: string;
+        user_id: string;
+        version: number;
+      }>;
       programs: TableDef<{
         active: boolean;
         created_at: string;

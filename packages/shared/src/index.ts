@@ -30,8 +30,23 @@ export {
   type PlannedSession,
 } from './schemas/common.js';
 export {
+  AthleteGoal,
+  AthleteProfile,
+  ExperienceLevel,
+  Equipment,
+  ScreeningFlag,
+  ScreeningEntry,
+  BLOCKING_SCREENING_FLAGS,
+  UNSUPPORTED_GOALS,
+  hasScreeningFlags,
+  programGenerationBlocked,
+  type AthleteGoal as AthleteGoalType,
+  type AthleteProfile as AthleteProfileType,
+} from './schemas/athlete-profile.js';
+export {
   buildProgramStructure,
   buildWeekSessions,
+  evaluateProgramGeneration,
   isDeloadWeek,
   mesocycleForWeek,
   programContextForDate,
@@ -39,9 +54,11 @@ export {
   DELOAD_WEEKS,
   TOTAL_WEEKS,
   type ProgramStructure,
+  type ProgramGenerationResult,
   type WeekSessionSeed,
   type WeekSessionSeedWithMeta,
 } from './program/factory.js';
+export { excludedExerciseIds, SCREENING_EXCLUSIONS } from './program/contraindications.js';
 export { EXERCISE_LIBRARY, type ExerciseSeed } from './seed/exercises.js';
 export { STAPLE_FOODS, type FoodSeed } from './seed/foods.js';
 export type { Database, Tables, TablesInsert, TablesUpdate, Json } from './db.types.js';
