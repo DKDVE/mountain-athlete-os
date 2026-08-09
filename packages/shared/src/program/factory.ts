@@ -2,7 +2,7 @@ import type { AthleteGoal, AthleteProfile } from '../schemas/athlete-profile.js'
 import { programGenerationBlocked } from '../schemas/athlete-profile.js';
 import type { SessionType, PlannedSession } from '../schemas/common.js';
 import { PlannedSessionSchema } from '../schemas/common.js';
-import { excludedExerciseIds } from './contraindications.js';
+import { excludedExerciseIds, resolveExerciseId } from './contraindications.js';
 
 export const DELOAD_WEEKS = [4, 8, 12] as const;
 export const TOTAL_WEEKS = 12;
@@ -97,57 +97,48 @@ function makeSets(count: number, reps: number, rpe: number, warmup = false) {
 }
 
 function buildSessionTemplates(scheme: GoalScheme, excluded: Set<string>): Record<string, PlannedSession> {
-  const keep = (id: string) => !excluded.has(id);
+  const pick = (preferredId: string) => resolveExerciseId(preferredId, excluded);
+
+  const exerciseEntry = (
+    preferredId: string,
+    sets: ReturnType<typeof makeSets>,
+    supersetWith?: string,
+  ) => {
+    const exerciseId = pick(preferredId);
+    if (!exerciseId) return null;
+    const partnerId = supersetWith ? pick(supersetWith) : undefined;
+    return {
+      exerciseId,
+      supersetWith: partnerId && partnerId !== exerciseId ? partnerId : undefined,
+      sets,
+    };
+  };
 
   const lowerAExercises = [
-    keep('back-squat') && {
-      exerciseId: 'back-squat',
-      sets: makeSets(scheme.compoundSets, scheme.compoundReps, scheme.compoundRpe, true),
-    },
-    keep('romanian-deadlift') && {
-      exerciseId: 'romanian-deadlift',
-      sets: makeSets(scheme.accessorySets, scheme.accessoryReps, scheme.accessoryRpe),
-    },
-    keep('bulgarian-split-squat') && {
-      exerciseId: 'bulgarian-split-squat',
-      sets: makeSets(2, scheme.accessoryReps, scheme.accessoryRpe),
-    },
+    exerciseEntry('back-squat', makeSets(scheme.compoundSets, scheme.compoundReps, scheme.compoundRpe, true)),
+    exerciseEntry('romanian-deadlift', makeSets(scheme.accessorySets, scheme.accessoryReps, scheme.accessoryRpe)),
+    exerciseEntry('bulgarian-split-squat', makeSets(2, scheme.accessoryReps, scheme.accessoryRpe)),
   ].filter(Boolean) as PlannedSession['exercises'];
 
   const lowerBExercises = [
-    keep('front-squat') && {
-      exerciseId: 'front-squat',
-      sets: makeSets(scheme.compoundSets, scheme.compoundReps, scheme.compoundRpe),
-    },
-    keep('hip-thrust') && {
-      exerciseId: 'hip-thrust',
-      sets: makeSets(scheme.accessorySets, scheme.accessoryReps, scheme.accessoryRpe),
-    },
-    keep('calf-raise') && {
-      exerciseId: 'calf-raise',
-      sets: makeSets(2, scheme.accessoryReps + 3, scheme.accessoryRpe),
-    },
+    exerciseEntry('front-squat', makeSets(scheme.compoundSets, scheme.compoundReps, scheme.compoundRpe)),
+    exerciseEntry('hip-thrust', makeSets(scheme.accessorySets, scheme.accessoryReps, scheme.accessoryRpe)),
+    exerciseEntry('calf-raise', makeSets(2, scheme.accessoryReps + 3, scheme.accessoryRpe)),
   ].filter(Boolean) as PlannedSession['exercises'];
 
   const upperExercises = [
-    keep('bench-press') && {
-      exerciseId: 'bench-press',
-      supersetWith: keep('barbell-row') ? 'barbell-row' : undefined,
-      sets: makeSets(scheme.compoundSets, scheme.compoundReps, scheme.compoundRpe, true),
-    },
-    keep('barbell-row') && {
-      exerciseId: 'barbell-row',
-      supersetWith: keep('bench-press') ? 'bench-press' : undefined,
-      sets: makeSets(scheme.accessorySets, scheme.accessoryReps, scheme.accessoryRpe),
-    },
-    keep('overhead-press') && {
-      exerciseId: 'overhead-press',
-      sets: makeSets(scheme.accessorySets, scheme.accessoryReps, scheme.accessoryRpe),
-    },
-    keep('pull-up') && {
-      exerciseId: 'pull-up',
-      sets: makeSets(2, scheme.accessoryReps, scheme.accessoryRpe),
-    },
+    exerciseEntry(
+      'bench-press',
+      makeSets(scheme.compoundSets, scheme.compoundReps, scheme.compoundRpe, true),
+      'barbell-row',
+    ),
+    exerciseEntry(
+      'barbell-row',
+      makeSets(scheme.accessorySets, scheme.accessoryReps, scheme.accessoryRpe),
+      'bench-press',
+    ),
+    exerciseEntry('overhead-press', makeSets(scheme.accessorySets, scheme.accessoryReps, scheme.accessoryRpe)),
+    exerciseEntry('pull-up', makeSets(2, scheme.accessoryReps, scheme.accessoryRpe)),
   ].filter(Boolean) as PlannedSession['exercises'];
 
   const mobility = ['hip-flexor-stretch', 'ankle-mobility', 'hamstring-stretch', 'shoulder-dislocates'].filter(

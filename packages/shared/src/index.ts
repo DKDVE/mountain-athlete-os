@@ -58,7 +58,7 @@ export {
   type WeekSessionSeed,
   type WeekSessionSeedWithMeta,
 } from './program/factory.js';
-export { excludedExerciseIds, SCREENING_EXCLUSIONS } from './program/contraindications.js';
+export { excludedExerciseIds, resolveExerciseId, SCREENING_EXCLUSIONS } from './program/contraindications.js';
 export { EXERCISE_LIBRARY, type ExerciseSeed } from './seed/exercises.js';
 export { STAPLE_FOODS, type FoodSeed } from './seed/foods.js';
 export type { Database, Tables, TablesInsert, TablesUpdate, Json } from './db.types.js';

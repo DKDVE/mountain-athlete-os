@@ -80,6 +80,28 @@ describe('goal-aware program factory', () => {
     const ids = upper?.planned.exercises.map((e) => e.exerciseId) ?? [];
     expect(ids).not.toContain('overhead-press');
     expect(ids).not.toContain('bench-press');
+    expect(ids.length).toBeGreaterThan(0);
+  });
+
+  it('substitutes safe lifts when dual injury would empty Lower A', () => {
+    const profile: AthleteProfileType = {
+      ...BASE,
+      screening: {
+        flags: [
+          { flag: 'current_injury', region: 'lowBack' },
+          { flag: 'current_injury', region: 'shoulder' },
+        ],
+      },
+    };
+    const sessions = buildWeekSessions('2026-08-10', 1, profile);
+    const lowerA = sessions.find((s) => s.title === 'Lower A');
+    expect(lowerA).toBeTruthy();
+    const ids = lowerA?.planned.exercises.map((e) => e.exerciseId) ?? [];
+    expect(ids.length).toBeGreaterThan(0);
+    expect(ids).not.toContain('back-squat');
+    expect(ids).not.toContain('romanian-deadlift');
+    expect(ids).not.toContain('bulgarian-split-squat');
+    expect(ids).toEqual(expect.arrayContaining(['goblet-squat', 'hip-thrust']));
   });
 
   it('event_specific defaults to hybrid template', () => {
